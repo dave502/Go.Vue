@@ -9,7 +9,7 @@ var jwtSigningMethod = jwt.SigningMethodHS256
 func initJWT() {
 	jwtSigningKey = []byte(env.GetAsString("JWT_SIGNING_KEY", "jwt-signing-ke"))
 	defaultCookie = http.Cookie{
-		HttpOnly: true,
+		HttpOnly: true, // access only from backend
 		SameSite: http.SameSiteLaxMode,
 		Domain:   env.GetAsString("COOKIE_DOMAIN", "localhost"),
 		Secure:   env.GetAsBool("COOKIE_SECURE", true),

@@ -31,3 +31,5 @@ __debug*
 *.bak
 *.env
 *.log
+*.bak/
+shop_frontend.bak/
