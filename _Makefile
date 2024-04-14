@@ -23,13 +23,13 @@ PSQLURL ?= $(DB_TYPE)://$(DB_USER):$(DB_PWD)@$(IP):5432/$(DB_NAME)
 # sqlc yaml file
 SQLC_YAML ?= shop_db/sqlc.yaml
 
-.PHONY : up uplogs postgresup postgresdown psql createdb teardown_recreate generate
+.PHONY : up logs postgresup postgresdown psql createdb teardown_recreate generate
 
 up: 
 	docker compose up -d 
 	
-uplogs:
-	docker compose up -d logs
+logs:
+	docker compose logs -f
 
 postgresup:
 	docker run --name test-postgres -v $(PWD):/usr/share/chapter1 -e POSTGRES_PASSWORD=$(DB_PWD) -p 5432:5432 -d $(DB_NAME)

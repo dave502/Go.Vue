@@ -24,6 +24,9 @@ import (
 
 func main() {
 
+	var conn *sql.DB
+	var err error
+
 	l := flag.Bool("local", true, "true - send to stdout, false - send to logging server")
 	flag.Parse()
 	logger.SetLoggingOutput(*l)
@@ -39,17 +42,21 @@ func main() {
 		env.GetAsString("DB_DATABASE", "shop_db"),
 	)
 
-	conn, err := sql.Open("postgres", dbURI)
-	if err != nil {
-		logger.Logger.Errorf("Error opening database : %s", err.Error())
+	for {
+		conn, err = sql.Open("postgres", dbURI)
+		if err != nil {
+			logger.Logger.Errorf("Error opening database : %s", err.Error())
+		}
+		// Проверка подключения
+		if err = conn.Ping(); err == nil {
+			logger.Logger.Info("Successful connection to database")
+			break
+		} else {
+			logger.Logger.Info("Keep trying...")
+		}
+		time.Sleep(2 * time.Second)
+		continue
 	}
-
-	// Проверка подключения
-	if err := conn.Ping(); err != nil {
-		logger.Logger.Errorf("Error opening database : %s", err.Error())
-	}
-
-	logger.Logger.Info("Successful connection to database")
 
 	// если используются аргументы - просто возвращаем результат
 	if str_args := os.Args[1:]; len(str_args) > 1 {

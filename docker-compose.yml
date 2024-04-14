@@ -42,26 +42,6 @@ services:
         options:
           max-size: "0.3m"
   
-  logs:
-    build:
-      context: ./logserver
-      dockerfile: Dockerfile
-      args:
-        PORT: ${LOG_SERVER_PORT}
-    restart: unless-stopped
-    container_name: shop_logs
-    hostname: ${LOG_HOST:-logs}
-    depends_on:
-      - db
-    env_file:
-      - .env
-    ports: [$LOG_SERVER_PORT]
-    networks:
-      - goweb
-    logging:
-        driver: "json-file"
-        options:
-          max-size: "0.3m"
  
   db:
     hostname: ${DB_HOST:-db}
@@ -95,6 +75,29 @@ services:
       - 8081:8080  
     networks:
       - goweb
+      
+      
+  # logs:
+  #   build:
+  #     context: ./logger
+  #     dockerfile: Dockerfile
+  #     args:
+  #       PORT: ${LOG_SERVER_PORT}
+  #   restart: unless-stopped
+  #   container_name: shop_logs
+  #   hostname: ${LOG_HOST:-logs}
+  #   depends_on:
+  #     - db
+  #   env_file:
+  #     - .env
+  #   ports: [$LOG_SERVER_PORT]
+  #   networks:
+  #     - goweb
+  #   logging:
+  #       driver: "json-file"
+  #       options:
+  #         max-size: "0.3m"    
+      
         
   # jaeger:
   # # http://localhost:16686
