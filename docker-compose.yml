@@ -2,53 +2,45 @@ version: '3.8'
 
 services:
 
-  # frontend:
-  #   build:
-  #     context: frontend
-  #     target: development
-  #     args:
-  #       - REACT_APP_FIREBASE_API_KEY=$REACT_APP_FIREBASE_API_KEY
-  #       - REACT_APP_FIREBASE_AUTH_DOMAIN=$REACT_APP_FIREBASE_AUTH_DOMAIN
-  #   environment:
-  #       - WDS_SOCKET_PORT=0
-  #   container_name: al.frontend
-  #   ports: [3000]
-  #   depends_on:
-  #     # - bot
-  #     - chat
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.frontend.rule=Host(`${HOST}`)"
-  #     - "traefik.http.routers.frontend.entrypoints=web, websecure"
-  #     - "traefik.http.routers.frontend.tls.certresolver=resolver"
-  #     - "traefik.http.routers.frontend.tls=true"  
-  #   volumes:
-  #     - ./frontend/src:/code/src
-  #     - /code/node_modules
-  #   networks:
-  #     - goweb
-  #   stdin_open: true
+  frontend:
+    build:
+      context: frontend
+      target: dev
+      args:
+        - VITE_BACKEND_URL=${VITE_BACKEND_URL}
+    container_name: frontend
+    depends_on:
+        - backend
+    ports:
+      - "5173:5173"
+    networks:
+      - goweb
 
-  # backend:
-  #   build:
-  #     context: ./shop_backend
-  #     dockerfile: Dockerfile
-  #     args:
-  #       PORT: ${BACK_SERVER_PORT}
-  #   restart: unless-stopped
-  #   container_name: shop_backend
-  #   hostname: ${BACK_HOST:-backend}
-  #   depends_on:
-  #     - db
-  #   env_file:
-  #     - .env
-  #   ports: [$BACK_SERVER_PORT]
-  #   networks:
-  #     - goweb
-  #   logging:
-  #       driver: "json-file"
-  #       options:
-  #         max-size: "0.3m"
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        PORT: ${BACK_SERVER_PORT}
+    restart: unless-stopped
+    container_name: shop_backend
+    hostname: ${BACK_HOST:-backend}
+    depends_on:
+      - db
+    environment:
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_PORT: ${DB_PORT}
+      DB_HOST: ${DB_HOST}
+    ports:
+      - $BACK_SERVER_PORT:$BACK_SERVER_PORT
+    networks:
+      - goweb
+    logging:
+        driver: "json-file"
+        options:
+          max-size: "0.3m"
   
   logs:
     build:
@@ -82,7 +74,7 @@ services:
       PGDATA: /data/postgres
     volumes:
        - shop_db:/data/postgres
-       - ./db/init/:/docker-entrypoint-initdb.d/
+       - ./backend/db/init/:/docker-entrypoint-initdb.d/
     ports: 
        - ${DB_PORT:-5432}:5432
     networks:
@@ -95,7 +87,6 @@ services:
       retries: 5
 
 
-
   adminer:
     image: adminer
     container_name: shop_pgadminer
@@ -105,53 +96,49 @@ services:
     networks:
       - goweb
         
-  jaeger:
-  # http://localhost:16686
-    image: jaegertracing/all-in-one:latest
-    ports:
-      - "6831:6831/udp"
-      - "16686:16686"
-      - "14268:14268"
-    networks:
-      - goweb
+  # jaeger:
+  # # http://localhost:16686
+  #   image: jaegertracing/all-in-one:latest
+  #   ports:
+  #     - "6831:6831/udp"
+  #     - "16686:16686"
+  #     - "14268:14268"
+  #   networks:
+  #     - goweb
 
 
-  prometheus:
-    image: prom/prometheus:latest
-    volumes:
-      - "./prometheus/config.yml:/etc/prometheus/prometheus.yml"
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'   
-    networks:
-      - goweb
-    ports:
-      - 9090:9090
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   volumes:
+  #     - "./prometheus/config.yml:/etc/prometheus/prometheus.yml"
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+  #     - '--web.console.templates=/usr/share/prometheus/consoles'   
+  #   networks:
+  #     - goweb
+  #   ports:
+  #     - 9090:9090
       
 
-  redis:
-    image: redis:latest
-    restart: unless-stopped
-    container_name: shop_reds
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_db:/data
-    # environment:
-    #   - REDIS_PASSWORD=my-password
-    #   - REDIS_PORT=6379
-    networks:
-      - goweb
+  # redis:
+  #   image: redis:latest
+  #   restart: unless-stopped
+  #   container_name: shop_reds
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_db:/data
+  #   # environment:
+  #   #   - REDIS_PASSWORD=my-password
+  #   #   - REDIS_PORT=6379
+  #   networks:
+  #     - goweb
 
 volumes:
   shop_db:
-  redis_db:
+  #redis_db:
   
 networks:
   goweb:
       external: true
-      
-      
-# https://neo4j.com/labs/apoc/5/installation/
-# https://github.com/neo4j/graph-data-science/releases

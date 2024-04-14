@@ -1,0 +1,62 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+TABLE shop.user
+{
+    User_ID        BIGSERIAL [pk]
+    User_Name      text [not null, unique]
+    Password_Hash text [not null]
+    Name           text  [not null]
+    Config         JSONB  [not null]
+    Created_At     TIMESTAMP  [not null, default: `now()`]
+    Is_Enabled     BOOLEAN [not null, default: TRUE]
+}
+
+
+TABLE shop.shelve [note: 'Стеллажи']
+{
+    Shelve_ID   bigserial [pk]
+    Shelve_Name text [not null, note: 'Буква стеллажа']
+}
+
+TABLE shop.product [note: 'Товары']
+{
+    Product_ID  bigserial [primary key]
+    Product_Name text [not null, unique]
+    Product_Price numeric(8,2) [not null]
+}
+
+
+TABLE shop.order [note: 'Заказы [Реквизиты документа]']
+{
+    Order_ID     bigserial [pk]
+    User_ID      bigserial [not null, ref: > shop.user.User_ID]
+    Order_Date   timestamp [not null, default: `now()`]
+    Is_Closed    BOOLEAN [note: 'Документ проведён', not null, default: FALSE] 
+}
+
+
+TABLE shop.order_table [note: 'Заказы [Табличная часть документа]']
+{
+    Table_ID      bigserial [pk]
+    Order_ID 	  bigserial  [not null, ref: > shop.order.Order_ID, note: 'Заголовок документа']
+    Product_ID 	  bigserial [not null, ref: > shop.product.Product_ID, note: 'Заказанный товар']
+    Quantity      int  [not null, default: 1, note: 'Заказанное количество']
+
+    indexes {
+        Order_ID [name: 'index_order_table_on_order_id', note: 'Индекс на реквизиты документа']
+    }
+}
+
+TABLE shop.product_location  [note: 'Расположения товаров']
+{
+    Location_ID bigserial [pk]
+    Product_ID  bigserial [not null, note: 'Товар']
+    Shelve_ID   bigserial [not null, note: 'Стеллаж товара']
+    Is_Main     BOOLEAN [note: 'Основной стеллаж', not null, default: TRUE] 
+     
+    indexes {
+      (Product_ID, Is_Main) [unique, name: 'only_one_shelve_is_main']
+      (Product_ID) [name: 'index_product_location_on_product_id']
+    }
+}
